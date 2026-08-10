@@ -10,4 +10,5 @@
 - Preserve recovery during a required update while blocking incompatible new submissions.
 - Add central-manifest plus repository-policy fallback for soft and hard upgrades.
 - Add live three-model contract checks, long polling, transient poll retry, mixed-output video selection, and actionable errors.
+- Add CI plus a daily public-contract monitor so schema drift is detected before upgrade policy changes.
 - Add the brief-to-delivery workflow, technical/creative QC, provenance, retention, and publication boundaries.

@@ -160,6 +160,8 @@ npm run check:contract
 
 合同检查只读取公开 schema 与价格元数据，不创建任务、不验证 API Key/余额，也不证明上游容量。
 
+GitHub Actions 会在每次改动时运行单测，并每天检查三个公开模型 schema，让合同漂移先暴露，再决定软升级或硬升级。
+
 ## License
 
 MIT

@@ -160,6 +160,8 @@ npm run check:contract
 
 The contract check reads public schemas and pricing metadata only. It does not create a task, validate the API key/account balance, or prove provider capacity.
 
+GitHub Actions runs the unit suite on every change and checks the three public model schemas daily so contract drift is visible before an upgrade policy is changed.
+
 ## License
 
 MIT

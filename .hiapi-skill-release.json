@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "family": "seedance-2.5",
+  "skillId": "hiapi-seedance-2-5-video",
+  "skillName": "hiapi-seedance-2-5-video",
+  "publicRepo": "HiAPIAI/hiapi-seedance-2-5-video-skill",
+  "modelIds": [
+    "seedance-2.5/text-to-video",
+    "seedance-2.5/image-to-video",
+    "seedance-2.5/reference-to-video"
+  ],
+  "cover": "assets/social-preview-seedance-2-5.png",
+  "centralDirectory": "hiapiai/skills/hiapi-skills",
+  "relatedRepositories": [
+    "hiapiai/prompt-libs/awesome-seedance-2-5-prompts"
+  ],
+  "requiredFiles": [
+    "scripts/hiapi-seedance-2-video.mjs",
+    "tests/seedance-2-video.test.mjs"
+  ],
+  "publicContractMarkers": [
+    "4-30",
+    "480p",
+    "720p"
+  ],
+  "forbiddenPublicClaims": [
+    "Native 4K quality",
+    "原生 4K 画质",
+    "3D references",
+    "3D 参考"
+  ],
+  "liveContractCommand": "npm run check:contract",
+  "testCommand": "npm test"
+}

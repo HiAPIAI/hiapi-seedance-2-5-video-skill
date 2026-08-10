@@ -1,5 +1,7 @@
 # HiAPI Seedance 2.5 Video Skill
 
+![HiAPI Seedance 2.5 Video Skill](assets/social-preview-seedance-2-5.png)
+
 An installable Agent Skill for planning, generating, recovering, downloading, and quality-checking Seedance 2.5 videos through HiAPI.
 
 **Text-to-video · Image-to-video · Reference-to-video · Up to 30 seconds · Native audio**

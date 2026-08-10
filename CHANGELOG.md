@@ -12,3 +12,5 @@
 - Add live three-model contract checks, long polling, transient poll retry, mixed-output video selection, and actionable errors.
 - Add CI plus a daily public-contract monitor so schema drift is detected before upgrade policy changes.
 - Add the brief-to-delivery workflow, technical/creative QC, provenance, retention, and publication boundaries.
+- Add the Image-generated HiAPI README cover to both language entry points.
+- Add `.hiapi-skill-release.json` so the local publisher can audit the skill, central directory, related prompt repository, upgrade policy, and public release as one unit.

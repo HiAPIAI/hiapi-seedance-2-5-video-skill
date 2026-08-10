@@ -1,5 +1,7 @@
 # HiAPI Seedance 2.5 视频技能
 
+![HiAPI Seedance 2.5 视频技能](assets/social-preview-seedance-2-5.png)
+
 一个可安装的 Agent Skill：通过 HiAPI 规划、生成、恢复、下载并质检 Seedance 2.5 视频。
 
 **文生视频 · 图生视频 · 参考生视频 · 最长 30 秒 · 原生音频**

@@ -216,18 +216,25 @@ test("supports optional and required updates with repository fallback", async ()
 });
 
 test("live contract checker validates all three public schemas", async () => {
+  const shared = {
+    prompt: {}, model: {}, duration: { minimum: 4, maximum: 30 },
+    resolution: { enum: ["480p", "720p"] }, generate_audio: {},
+    output_format: { enum: ["mp4", "mov"] }, web_search: {},
+  };
+  const generalRatios = ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"];
   const schemas = {
     [MODELS.text]: { required: ["prompt", "model"], properties: {
-      duration: { minimum: 4, maximum: 30 }, resolution: { enum: ["480p", "720p"] },
-      aspect_ratio: {}, generate_audio: {}, output_format: {}, watermark: {}, web_search: {},
+      ...shared, aspect_ratio: { enum: generalRatios }, watermark: {},
     } },
     [MODELS.image]: { required: ["prompt", "model"], properties: {
-      duration: { minimum: 4, maximum: 30 }, resolution: { enum: ["480p", "720p"] },
-      first_frame_url: {}, last_frame_url: {}, reference_image_urls: {}, reference_audio_urls: {},
+      ...shared, aspect_ratio: { enum: ["adaptive"] }, watermark: {},
+      first_frame_url: {}, last_frame_url: {},
+      reference_image_urls: { maxItems: 30 }, reference_audio_urls: { maxItems: 10 },
     } },
     [MODELS.reference]: { required: ["prompt", "reference_video_urls", "model"], properties: {
-      duration: { minimum: 4, maximum: 30 }, resolution: { enum: ["480p", "720p"] },
-      reference_video_urls: {}, reference_image_urls: {}, reference_audio_urls: {},
+      ...shared, aspect_ratio: { enum: generalRatios },
+      reference_video_urls: { minItems: 1, maxItems: 10 },
+      reference_image_urls: { maxItems: 30 }, reference_audio_urls: { maxItems: 10 },
     } },
   };
   const fetchImpl = async (url) => {

@@ -476,9 +476,23 @@ export async function checkLiveContract(options = {}) {
   const siteUrl = (options.siteUrl || process.env.HIAPI_SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, "");
   const fetchImpl = options.fetchImpl || fetch;
   const expected = {
-    [MODELS.text]: { required: ["prompt", "model"], properties: ["duration", "resolution", "aspect_ratio", "generate_audio", "output_format", "watermark", "web_search"] },
-    [MODELS.image]: { required: ["prompt", "model"], properties: ["first_frame_url", "last_frame_url", "reference_image_urls", "reference_audio_urls"] },
-    [MODELS.reference]: { required: ["prompt", "reference_video_urls", "model"], properties: ["reference_video_urls", "reference_image_urls", "reference_audio_urls"] },
+    [MODELS.text]: {
+      required: ["prompt", "model"],
+      properties: ["prompt", "model", "duration", "resolution", "aspect_ratio", "generate_audio", "output_format", "watermark", "web_search"],
+      ratios: [...SUPPORTED_RATIOS],
+    },
+    [MODELS.image]: {
+      required: ["prompt", "model"],
+      properties: ["prompt", "model", "duration", "resolution", "aspect_ratio", "generate_audio", "output_format", "watermark", "web_search", "first_frame_url", "last_frame_url", "reference_image_urls", "reference_audio_urls"],
+      ratios: ["adaptive"],
+      maxItems: { reference_image_urls: MAX_REFERENCE_IMAGES, reference_audio_urls: MAX_REFERENCE_AUDIO },
+    },
+    [MODELS.reference]: {
+      required: ["prompt", "reference_video_urls", "model"],
+      properties: ["prompt", "model", "duration", "resolution", "aspect_ratio", "generate_audio", "output_format", "web_search", "reference_video_urls", "reference_image_urls", "reference_audio_urls"],
+      ratios: [...SUPPORTED_RATIOS],
+      maxItems: { reference_video_urls: MAX_REFERENCE_VIDEOS, reference_image_urls: MAX_REFERENCE_IMAGES, reference_audio_urls: MAX_REFERENCE_AUDIO },
+    },
   };
   const checks = [];
   for (const [model, contract] of Object.entries(expected)) {
@@ -491,13 +505,35 @@ export async function checkLiveContract(options = {}) {
     const missingProperties = contract.properties.filter((field) => !Object.hasOwn(schema.properties || {}, field));
     const duration = schema.properties?.duration || {};
     const resolutions = schema.properties?.resolution?.enum || [];
+    const ratios = schema.properties?.aspect_ratio?.enum || [];
+    const outputFormats = schema.properties?.output_format?.enum || [];
+    const itemLimitMismatches = Object.entries(contract.maxItems || {})
+      .filter(([field, maximum]) => schema.properties?.[field]?.maxItems !== maximum)
+      .map(([field, maximum]) => ({ field, expected: maximum, actual: schema.properties?.[field]?.maxItems }));
+    const missingRatios = contract.ratios.filter((value) => !ratios.includes(value));
     const ok = missingRequired.length === 0
       && missingProperties.length === 0
       && duration.minimum === MIN_SECONDS
       && duration.maximum === MAX_SECONDS
       && SUPPORTED_RESOLUTIONS.size === resolutions.length
-      && [...SUPPORTED_RESOLUTIONS].every((value) => resolutions.includes(value));
-    checks.push({ model, ok, missingRequired, missingProperties, duration: [duration.minimum, duration.maximum], resolutions });
+      && [...SUPPORTED_RESOLUTIONS].every((value) => resolutions.includes(value))
+      && ratios.length === contract.ratios.length
+      && missingRatios.length === 0
+      && SUPPORTED_OUTPUT_FORMATS.size === outputFormats.length
+      && [...SUPPORTED_OUTPUT_FORMATS].every((value) => outputFormats.includes(value))
+      && itemLimitMismatches.length === 0
+      && (model !== MODELS.reference || schema.properties?.reference_video_urls?.minItems === 1);
+    checks.push({
+      model,
+      ok,
+      missingRequired,
+      missingProperties,
+      duration: [duration.minimum, duration.maximum],
+      resolutions,
+      ratios,
+      outputFormats,
+      itemLimitMismatches,
+    });
   }
   return { ok: checks.every((check) => check.ok), checkedAt: new Date().toISOString(), checks };
 }

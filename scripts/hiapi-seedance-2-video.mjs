@@ -25,7 +25,7 @@ async function main() {
     return;
   }
 
-  await warnOrRequireSkillUpdate({ allowRecovery: Boolean(options.resumeTaskId || options.dryRun) });
+  await warnOrRequireSkillUpdate({ allowRecovery: Boolean(options.resumeTaskId || options.dryRun || options.estimate) });
 
   if (options.dryRun || options.estimate) {
     const payload = buildVideoPayload(options);
@@ -37,7 +37,7 @@ async function main() {
       estimate,
       next: "Review the payload and estimate, then remove --dry-run and --estimate to create the paid task.",
     }, null, 2));
-    if (options.dryRun) return;
+    return;
   }
 
   const config = resolveConfig();

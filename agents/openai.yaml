@@ -1,0 +1,8 @@
+interface:
+  display_name: "HiAPI Seedance 2.5"
+  short_description: "Plan and produce Seedance 2.5 videos through HiAPI"
+  brand_color: "#F97316"
+  default_prompt: "Use $hiapi-seedance-2-5-video to plan the video, run a cost preflight, then generate and quality-check the approved Seedance 2.5 result through HiAPI."
+
+policy:
+  allow_implicit_invocation: true

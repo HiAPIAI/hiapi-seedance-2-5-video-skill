@@ -1,0 +1,6 @@
+outputs/
+.env
+.env.*
+!.env.example
+*.log
+.git/

@@ -12,7 +12,7 @@
   "cover": "assets/social-preview-seedance-2-5.png",
   "centralDirectory": "hiapiai/skills/hiapi-skills",
   "relatedRepositories": [
-    "hiapiai/prompt-libs/awesome-seedance-2-5-prompts"
+    "hiapiai/prompt-libs/awesome-ai-video-prompts"
   ],
   "requiredFiles": [
     "scripts/hiapi-seedance-2-video.mjs",

@@ -20,7 +20,7 @@ Links:
 - API key: https://www.hiapi.ai/en/dashboard/api-keys
 - Pricing: https://www.hiapi.ai/en/pricing
 - Docs: https://docs.hiapi.ai/models/video/seedance-2-5/
-- Prompt gallery: https://github.com/HiAPIAI/awesome-seedance-2-5-prompts
+- Prompt gallery: https://github.com/HiAPIAI/awesome-ai-video-prompts
 
 Never invent a result, task status, price, or downloaded path. Never submit a second paid task merely because polling or downloading was interrupted.
 

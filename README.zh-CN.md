@@ -6,7 +6,7 @@
 
 **文生视频 · 图生视频 · 参考生视频 · 最长 30 秒 · 原生音频**
 
-[获取 API Key](https://www.hiapi.ai/zh/dashboard/api-keys) · [查看价格](https://www.hiapi.ai/zh/pricing) · [API 文档](https://docs.hiapi.ai/zh/models/video/seedance-2-5/) · [Seedance 2.5 提示词库](https://github.com/HiAPIAI/awesome-seedance-2-5-prompts) · [全部 HiAPI Skills](https://github.com/HiAPIAI/hiapi-skills)
+[获取 API Key](https://www.hiapi.ai/zh/dashboard/api-keys) · [查看价格](https://www.hiapi.ai/zh/pricing) · [API 文档](https://docs.hiapi.ai/zh/models/video/seedance-2-5/) · [Seedance 2.5 提示词库](https://github.com/HiAPIAI/awesome-ai-video-prompts) · [全部 HiAPI Skills](https://github.com/HiAPIAI/hiapi-skills)
 
 Languages: [English](README.md) | [简体中文](README.zh-CN.md)
 

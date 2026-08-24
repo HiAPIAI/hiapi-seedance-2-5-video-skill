@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
 export const SKILL_ID = "hiapi-seedance-2-5-video";
-export const SKILL_VERSION = "1.0.0";
+export const SKILL_VERSION = "1.1.0";
 export const DEFAULT_BASE_URL = "https://api.hiapi.ai";
 export const DEFAULT_SITE_URL = "https://www.hiapi.ai";
 export const DEFAULT_SKILLS_MANIFEST_URL = "https://raw.githubusercontent.com/HiAPIAI/hiapi-skills/main/skills.json";
@@ -18,8 +18,18 @@ export const MODELS = Object.freeze({
 export const DEFAULT_SECONDS = 5;
 export const MIN_SECONDS = 4;
 export const MAX_SECONDS = 30;
-export const DEFAULT_RESOLUTION = "480p";
-export const SUPPORTED_RESOLUTIONS = new Set(["480p", "720p"]);
+export const DEFAULT_RESOLUTION = "720p";
+export const DEFAULT_RESOLUTIONS = Object.freeze({
+  text: "720p",
+  image: "720p",
+  reference: "480p",
+});
+export const SUPPORTED_RESOLUTIONS = new Set(["720p", "1080p"]);
+export const SUPPORTED_RESOLUTIONS_BY_MODE = Object.freeze({
+  text: new Set(["720p", "1080p"]),
+  image: new Set(["720p", "1080p"]),
+  reference: new Set(["480p", "720p", "1080p"]),
+});
 export const DEFAULT_RATIO = "adaptive";
 export const SUPPORTED_RATIOS = new Set(["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"]);
 export const SUPPORTED_OUTPUT_FORMATS = new Set(["mp4", "mov"]);
@@ -96,10 +106,13 @@ export function normalizeSeconds(value = DEFAULT_SECONDS) {
   return seconds;
 }
 
-export function normalizeResolution(value = DEFAULT_RESOLUTION) {
-  const resolution = String(value ?? DEFAULT_RESOLUTION).trim().toLowerCase();
-  if (!SUPPORTED_RESOLUTIONS.has(resolution)) {
-    throw new Error(`Unsupported resolution "${value}". Current HiAPI Seedance 2.5 supports 480p or 720p.`);
+export function normalizeResolution(value, mode = "text") {
+  const supported = SUPPORTED_RESOLUTIONS_BY_MODE[mode];
+  if (!supported) throw new Error(`Unsupported mode "${mode}" for resolution validation.`);
+  const fallback = DEFAULT_RESOLUTIONS[mode];
+  const resolution = String(value ?? fallback).trim().toLowerCase();
+  if (!supported.has(resolution)) {
+    throw new Error(`Unsupported resolution "${value}" for ${mode} mode. Use one of: ${Array.from(supported).join(", ")}.`);
   }
   return resolution;
 }
@@ -217,7 +230,7 @@ export function buildVideoPayload(options = {}) {
   const input = {
     prompt,
     duration: normalizeSeconds(options.seconds),
-    resolution: normalizeResolution(options.resolution),
+    resolution: normalizeResolution(options.resolution, mode),
     aspect_ratio: normalizeRatio(options.ratio, mode),
     output_format: normalizeOutputFormat(options.outputFormat),
   };
@@ -294,7 +307,7 @@ export function buildHttpErrorMessage(status, body) {
     return `${prefix}\nCheck balance at ${HIAPI_DASHBOARD_URL} and pricing at ${HIAPI_PRICING_URL}.`;
   }
   if (status === 400 || lower.includes("invalid")) {
-    return `${prefix}\nRun --dry-run --estimate and check the selected mode, 4-30s duration, 480p/720p resolution, media counts, formats, sizes, and reference durations.`;
+    return `${prefix}\nRun --dry-run --estimate and check the selected mode, 4-30s duration, mode-specific resolution, media counts, formats, sizes, and reference durations.`;
   }
   if (status === 429) return `${prefix}\nWait and retry, or reduce concurrent video tasks.`;
   return prefix;
@@ -480,17 +493,23 @@ export async function checkLiveContract(options = {}) {
       required: ["prompt", "model"],
       properties: ["prompt", "model", "duration", "resolution", "aspect_ratio", "generate_audio", "output_format", "watermark", "web_search"],
       ratios: [...SUPPORTED_RATIOS],
+      resolutions: [...SUPPORTED_RESOLUTIONS_BY_MODE.text],
+      defaultResolution: DEFAULT_RESOLUTIONS.text,
     },
     [MODELS.image]: {
       required: ["prompt", "model"],
       properties: ["prompt", "model", "duration", "resolution", "aspect_ratio", "generate_audio", "output_format", "watermark", "web_search", "first_frame_url", "last_frame_url", "reference_image_urls", "reference_audio_urls"],
       ratios: ["adaptive"],
+      resolutions: [...SUPPORTED_RESOLUTIONS_BY_MODE.image],
+      defaultResolution: DEFAULT_RESOLUTIONS.image,
       maxItems: { reference_image_urls: MAX_REFERENCE_IMAGES, reference_audio_urls: MAX_REFERENCE_AUDIO },
     },
     [MODELS.reference]: {
       required: ["prompt", "reference_video_urls", "model"],
       properties: ["prompt", "model", "duration", "resolution", "aspect_ratio", "generate_audio", "output_format", "web_search", "reference_video_urls", "reference_image_urls", "reference_audio_urls"],
       ratios: [...SUPPORTED_RATIOS],
+      resolutions: [...SUPPORTED_RESOLUTIONS_BY_MODE.reference],
+      defaultResolution: DEFAULT_RESOLUTIONS.reference,
       maxItems: { reference_video_urls: MAX_REFERENCE_VIDEOS, reference_image_urls: MAX_REFERENCE_IMAGES, reference_audio_urls: MAX_REFERENCE_AUDIO },
     },
   };
@@ -515,8 +534,9 @@ export async function checkLiveContract(options = {}) {
       && missingProperties.length === 0
       && duration.minimum === MIN_SECONDS
       && duration.maximum === MAX_SECONDS
-      && SUPPORTED_RESOLUTIONS.size === resolutions.length
-      && [...SUPPORTED_RESOLUTIONS].every((value) => resolutions.includes(value))
+      && contract.resolutions.length === resolutions.length
+      && contract.resolutions.every((value) => resolutions.includes(value))
+      && schema.properties?.resolution?.default === contract.defaultResolution
       && ratios.length === contract.ratios.length
       && missingRatios.length === 0
       && SUPPORTED_OUTPUT_FORMATS.size === outputFormats.length
@@ -530,6 +550,7 @@ export async function checkLiveContract(options = {}) {
       missingProperties,
       duration: [duration.minimum, duration.maximum],
       resolutions,
+      resolutionDefault: schema.properties?.resolution?.default,
       ratios,
       outputFormats,
       itemLimitMismatches,
@@ -654,10 +675,10 @@ export function usage() {
   return `HiAPI Seedance 2.5 video skill
 
 Preflight (no paid task):
-  node scripts/hiapi-seedance-2-video.mjs --prompt "..." --seconds 5 --resolution 480p --dry-run --estimate
+  node scripts/hiapi-seedance-2-video.mjs --prompt "..." --seconds 5 --resolution 720p --dry-run --estimate
 
 Create and wait:
-  node scripts/hiapi-seedance-2-video.mjs --prompt "..." --seconds 5 --resolution 480p
+  node scripts/hiapi-seedance-2-video.mjs --prompt "..." --seconds 5 --resolution 720p
 
 Recover an existing paid task (does not create another task):
   node scripts/hiapi-seedance-2-video.mjs --resume-task-id <task-id>
@@ -666,7 +687,7 @@ Core options:
   --mode <text|image|reference>       Usually inferred from media inputs
   --prompt <text>                     Required for new tasks
   --seconds <4-30>                    Default: 5
-  --resolution <480p|720p>            Default: 480p
+  --resolution <480p|720p|1080p>      Text/image: 720p or 1080p (default 720p); reference: 480p, 720p, or 1080p (default 480p)
   --ratio <16:9|4:3|1:1|3:4|9:16|21:9|adaptive>  Default: adaptive
   --output-format <mp4|mov>           Default: mp4
   --first-frame-url <url>             Selects image-to-video

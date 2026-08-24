@@ -69,7 +69,7 @@ Check:
 
 - inferred mode and exact model ID;
 - 4-30 second integer duration;
-- 480p/720p resolution;
+- mode-specific resolution: text/image `720p` or `1080p`; reference `480p`, `720p`, or `1080p`;
 - ratio compatibility;
 - audio and watermark decisions;
 - input counts, formats, sizes, durations, and ordering;

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 — 2026-08-24
+
+- Align text-to-video and image-to-video with the live `720p`/`1080p` contract and `720p` default.
+- Align reference-to-video with the live `480p`/`720p`/`1080p` contract and `480p` default.
+- Validate resolution by inferred mode so text/image requests cannot send unsupported `480p` while reference requests retain it.
+- Extend the public contract monitor to verify each mode's resolution enum and default.
+- Require versions older than 1.1.0 to update before creating a new paid task; existing task recovery remains available.
+
 ## 1.0.0 — 2026-08-10
 
 - Support the three live HiAPI Seedance 2.5 model IDs: text-to-video, image-to-video, and reference-to-video.

@@ -1,6 +1,6 @@
 # HiAPI Seedance 2.5 API Contract
 
-Verified against the public HiAPI model schemas on 2026-08-10. Re-run `node scripts/check-config.mjs --live` before changing runtime constants.
+Verified against the public HiAPI model schemas on 2026-08-24. Re-run `node scripts/check-config.mjs --live` before changing runtime constants.
 
 ## Endpoints
 
@@ -31,7 +31,7 @@ These are independent public model IDs. Do not send the old draft ID `seedance-2
 | --- | --- |
 | `prompt` | Required non-empty string. |
 | `duration` | Integer 4-30; default 5. Billed by requested duration. |
-| `resolution` | `480p` or `720p`; default 480p. |
+| `resolution` | Text/image: `720p` or `1080p`, default `720p`. Reference: `480p`, `720p`, or `1080p`, default `480p`. |
 | `output_format` | `mp4` or `mov`; default mp4. |
 | `generate_audio` | Boolean; default true. |
 | `web_search` | Boolean; default false. |
@@ -46,7 +46,7 @@ Text and reference modes accept `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `21:9`, or 
   "input": {
     "prompt": "A continuous cinematic shot...",
     "duration": 5,
-    "resolution": "480p",
+    "resolution": "720p",
     "aspect_ratio": "16:9",
     "output_format": "mp4",
     "generate_audio": true,

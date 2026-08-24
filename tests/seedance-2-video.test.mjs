@@ -23,11 +23,12 @@ import {
   redactPayload,
   requestJson,
   resolveMode,
+  warnOrRequireSkillUpdate,
 } from "../scripts/lib/seedance-2-video.mjs";
 
 test("runtime and package versions stay aligned", () => {
   const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-  assert.equal(SKILL_VERSION, "1.0.0");
+  assert.equal(SKILL_VERSION, "1.1.0");
   assert.equal(SKILL_VERSION, packageJson.version);
 });
 
@@ -120,7 +121,11 @@ test("validates current duration, resolution, and ratio contract", () => {
   assert.throws(() => normalizeSeconds(3), /4 to 30/i);
   assert.throws(() => normalizeSeconds(31), /4 to 30/i);
   assert.equal(normalizeResolution("720P"), "720p");
-  assert.throws(() => normalizeResolution("1080p"), /480p or 720p/i);
+  assert.equal(normalizeResolution("1080p", "text"), "1080p");
+  assert.equal(normalizeResolution(undefined, "text"), "720p");
+  assert.equal(normalizeResolution(undefined, "reference"), "480p");
+  assert.equal(normalizeResolution("480p", "reference"), "480p");
+  assert.throws(() => normalizeResolution("480p", "text"), /text mode.*720p, 1080p/i);
   assert.equal(normalizeRatio("16:9", "text"), "16:9");
 });
 
@@ -215,24 +220,39 @@ test("supports optional and required updates with repository fallback", async ()
   assert.equal(compareVersions("1.2.0", "1.1.9"), 1);
 });
 
+test("published policy hard-blocks v1.0.0 creation but preserves recovery", async () => {
+  const policy = JSON.parse(readFileSync(new URL("../update-policy.json", import.meta.url), "utf8"));
+  const fetchImpl = async () => new Response(JSON.stringify(policy), { status: 200 });
+  await assert.rejects(
+    () => warnOrRequireSkillUpdate({ currentVersion: "1.0.0", manifestUrls: ["https://x/policy"], fetchImpl }),
+    /required: 1\.1\.0/i,
+  );
+  const recovery = await warnOrRequireSkillUpdate({
+    currentVersion: "1.0.0",
+    manifestUrls: ["https://x/policy"],
+    fetchImpl,
+    allowRecovery: true,
+  });
+  assert.equal(recovery.status, "required");
+});
+
 test("live contract checker validates all three public schemas", async () => {
   const shared = {
     prompt: {}, model: {}, duration: { minimum: 4, maximum: 30 },
-    resolution: { enum: ["480p", "720p"] }, generate_audio: {},
-    output_format: { enum: ["mp4", "mov"] }, web_search: {},
+    generate_audio: {}, output_format: { enum: ["mp4", "mov"] }, web_search: {},
   };
   const generalRatios = ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"];
   const schemas = {
     [MODELS.text]: { required: ["prompt", "model"], properties: {
-      ...shared, aspect_ratio: { enum: generalRatios }, watermark: {},
+      ...shared, resolution: { default: "720p", enum: ["720p", "1080p"] }, aspect_ratio: { enum: generalRatios }, watermark: {},
     } },
     [MODELS.image]: { required: ["prompt", "model"], properties: {
-      ...shared, aspect_ratio: { enum: ["adaptive"] }, watermark: {},
+      ...shared, resolution: { default: "720p", enum: ["720p", "1080p"] }, aspect_ratio: { enum: ["adaptive"] }, watermark: {},
       first_frame_url: {}, last_frame_url: {},
       reference_image_urls: { maxItems: 30 }, reference_audio_urls: { maxItems: 10 },
     } },
     [MODELS.reference]: { required: ["prompt", "reference_video_urls", "model"], properties: {
-      ...shared, aspect_ratio: { enum: generalRatios },
+      ...shared, resolution: { default: "480p", enum: ["480p", "720p", "1080p"] }, aspect_ratio: { enum: generalRatios },
       reference_video_urls: { minItems: 1, maxItems: 10 },
       reference_image_urls: { maxItems: 30 }, reference_audio_urls: { maxItems: 10 },
     } },

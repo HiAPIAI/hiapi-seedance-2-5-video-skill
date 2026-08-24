@@ -15,7 +15,7 @@ Languages: [English](README.md) | [简体中文](README.zh-CN.md)
 真正有用的视频技能不应只是包一层 API。它要把创意规划和付费动作分开，选对生产模型 ID，保存恢复凭据，并把生成结果带到技术与内容质检。
 
 - 三个生产模型 ID：`seedance-2.5/text-to-video`、`image-to-video`、`reference-to-video`。
-- 对齐线上合同：4-30 秒、480p/720p、正确的画幅和素材限制。
+- 对齐线上合同：4-30 秒、按模式支持 480p/720p/1080p，并校验正确的画幅和素材限制。
 - 付费前预检：校验脱敏 payload，并从公开价格接口获取当前估价。
 - 防重复扣费：幂等键与 `--resume-task-id`。
 - 长任务可恢复：默认轮询 120 分钟，瞬时网络错误自动退避重试。
@@ -67,7 +67,7 @@ node scripts/check-config.mjs --live
 node scripts/hiapi-seedance-2-video.mjs \
   --prompt "海上暴风雨中的玻璃展馆，连续电影长镜头" \
   --seconds 5 \
-  --resolution 480p \
+  --resolution 720p \
   --ratio 16:9 \
   --dry-run \
   --estimate
@@ -83,7 +83,7 @@ node scripts/hiapi-seedance-2-video.mjs \
 node scripts/hiapi-seedance-2-video.mjs \
   --prompt "海上暴风雨中的玻璃展馆，连续电影长镜头" \
   --seconds 5 \
-  --resolution 480p \
+  --resolution 1080p \
   --ratio 16:9 \
   --generate-audio
 ```
@@ -124,7 +124,8 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 | 能力 | HiAPI 当前支持 |
 | --- | --- |
 | 时长 | 4-30 秒整数 |
-| 分辨率 | 480p、720p |
+| 文生/图生分辨率 | 720p、1080p；默认 720p |
+| 参考生分辨率 | 480p、720p、1080p；默认 480p |
 | 输出格式 | MP4、MOV |
 | 文生/参考生画幅 | 16:9、4:3、1:1、3:4、9:16、21:9、adaptive |
 | 图生视频画幅 | adaptive，跟随首帧 |
@@ -132,7 +133,7 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 | 参考视频 | 最多 10 段；每段 2-30 秒；总计 ≤30 秒 |
 | 参考音频 | 最多 10 段；每段 2-30 秒；总计 ≤30 秒 |
 
-当前公开 HiAPI Seedance 2.5 任务合同只开放 480p 和 720p，因此本 Skill 不会发送 1080p 或 4K。修改能力前先运行线上合同检查。
+本 Skill 会在选定模式后校验分辨率：文生/图生不会发送 `480p`，参考生仍保留 `480p`。当前公开合同未开放 4K；修改限制前先运行线上合同检查。
 
 ## 软升级与硬升级
 

@@ -53,7 +53,8 @@ Reference-to-video is reference-guided generation, not literal video editing or 
 ## Current HiAPI Contract
 
 - Duration: integer `4`-`30` seconds.
-- Resolution: `480p` or `720p`.
+- Text/image resolution: `720p` or `1080p`; default `720p`.
+- Reference resolution: `480p`, `720p`, or `1080p`; default `480p`.
 - Output format: `mp4` or `mov`.
 - Text/reference ratios: `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `21:9`, `adaptive`.
 - Image-to-video ratio: `adaptive` only; output follows the first frame.
@@ -63,7 +64,7 @@ Reference-to-video is reference-guided generation, not literal video editing or 
 - Reference audio: up to 10, each 2-30 seconds, combined duration at most 30 seconds.
 - Text/image modes support an optional watermark; reference mode currently does not.
 
-Do not advertise or send 1080p/4K for the current HiAPI Seedance 2.5 contract. Re-run the live contract check before changing these limits.
+Do not send `480p` for text/image mode or advertise 4K for the current HiAPI contract. Re-run the live contract check before changing these limits.
 
 ## Paid-Task Preflight
 
@@ -73,7 +74,7 @@ First validate the payload and fetch a current estimate without creating a task:
 node scripts/hiapi-seedance-2-video.mjs \
   --prompt "A continuous cinematic shot of a glass pavilion above a stormy ocean" \
   --seconds 5 \
-  --resolution 480p \
+  --resolution 720p \
   --ratio 16:9 \
   --dry-run \
   --estimate
@@ -89,7 +90,7 @@ Text-to-video:
 node scripts/hiapi-seedance-2-video.mjs \
   --prompt "A continuous cinematic shot of a glass pavilion above a stormy ocean" \
   --seconds 5 \
-  --resolution 480p \
+  --resolution 1080p \
   --ratio 16:9 \
   --generate-audio
 ```

@@ -15,7 +15,7 @@ Languages: [English](README.md) | [简体中文](README.zh-CN.md)
 A useful video skill is more than a thin API call. This one separates creative planning from a paid side effect, chooses the correct production model ID, preserves recovery handles, and carries the result through technical and creative QC.
 
 - Three production IDs: `seedance-2.5/text-to-video`, `image-to-video`, and `reference-to-video`.
-- Live-aligned validation: 4-30 seconds, 480p/720p, correct ratios and media limits.
+- Live-aligned validation: 4-30 seconds, mode-specific 480p/720p/1080p, correct ratios and media limits.
 - Cost-aware preflight: validate a redacted payload and fetch current public pricing before submitting.
 - Duplicate-charge protection: idempotency keys and `--resume-task-id`.
 - Long-job resilience: 120-minute default polling with transient retry.
@@ -67,7 +67,7 @@ Validate the request and fetch a current estimate without creating a paid task:
 node scripts/hiapi-seedance-2-video.mjs \
   --prompt "A continuous cinematic shot of a glass pavilion above a stormy ocean" \
   --seconds 5 \
-  --resolution 480p \
+  --resolution 720p \
   --ratio 16:9 \
   --dry-run \
   --estimate
@@ -83,7 +83,7 @@ Text-to-video:
 node scripts/hiapi-seedance-2-video.mjs \
   --prompt "A continuous cinematic shot of a glass pavilion above a stormy ocean" \
   --seconds 5 \
-  --resolution 480p \
+  --resolution 1080p \
   --ratio 16:9 \
   --generate-audio
 ```
@@ -124,7 +124,8 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 | Capability | Current HiAPI support |
 | --- | --- |
 | Duration | Integer 4-30 seconds |
-| Resolution | 480p, 720p |
+| Text/image resolution | 720p, 1080p; default 720p |
+| Reference resolution | 480p, 720p, 1080p; default 480p |
 | Output | MP4, MOV |
 | Text/reference ratios | 16:9, 4:3, 1:1, 3:4, 9:16, 21:9, adaptive |
 | Image mode ratio | adaptive; follows first frame |
@@ -132,7 +133,7 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 | Reference videos | Up to 10; each 2-30s; total ≤30s |
 | Reference audio | Up to 10; each 2-30s; total ≤30s |
 
-This skill does not send 1080p or 4K because the current public HiAPI Seedance 2.5 task schemas expose 480p and 720p. Run the live check before changing the contract.
+The skill validates resolution after selecting the mode: text/image requests cannot send `480p`, while reference mode retains it. The current public contract does not expose 4K. Run the live check before changing these limits.
 
 ## Soft And Hard Upgrades
 

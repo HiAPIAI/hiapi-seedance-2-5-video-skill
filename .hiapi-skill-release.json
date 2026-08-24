@@ -12,7 +12,8 @@
   "cover": "assets/social-preview-seedance-2-5.png",
   "centralDirectory": "hiapiai/skills/hiapi-skills",
   "relatedRepositories": [
-    "hiapiai/prompt-libs/awesome-ai-video-prompts"
+    "hiapiai/prompt-libs/awesome-ai-video-prompts",
+    "hiapiai/prompt-libs/awesome-seedance-2-5-prompts"
   ],
   "requiredFiles": [
     "scripts/hiapi-seedance-2-video.mjs",
@@ -21,7 +22,8 @@
   "publicContractMarkers": [
     "4-30",
     "480p",
-    "720p"
+    "720p",
+    "1080p"
   ],
   "forbiddenPublicClaims": [
     "Native 4K quality",

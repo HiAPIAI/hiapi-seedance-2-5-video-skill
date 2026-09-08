@@ -1,137 +1,60 @@
-# HiAPI Seedance 2.5 API Contract
+# HiAPI Seedance 2.5 API contract
 
-Verified against the public HiAPI model schemas on 2026-08-24. Re-run `node scripts/check-config.mjs --live` before changing runtime constants.
+Verified against production schemas and published HiAPI docs on 2026-09-08. Run `node scripts/check-config.mjs --live` to detect drift without an API key or paid task.
 
-## Endpoints
+## Complete field map
 
-```text
-POST https://api.hiapi.ai/v1/tasks
-GET  https://api.hiapi.ai/v1/tasks/{taskId}
+Create with `POST https://api.hiapi.ai/v1/tasks`; poll `GET https://api.hiapi.ai/v1/tasks/{taskId}`. Use Authorization Bearer, JSON Content-Type and a stable Idempotency-Key for creation.
+
+| Public field | CLI | Current contract |
+| --- | --- | --- |
+| `model` | `--model` or `--mode` | `seedance-2.5/text-to-video`, `seedance-2.5/image-to-video`, `seedance-2.5/reference-to-video` |
+| `input.prompt` | `--prompt` | Required in all three modes |
+| `input.duration` | `--seconds` / `--duration` | Default 5; integers 4-30; -1 for automatic output only in reference mode |
+| `input.resolution` | `--resolution` | Text/image 720p or 1080p, default 720p; reference 480p/720p/1080p, default 480p |
+| `input.aspect_ratio` | `--ratio` / `--aspect-ratio` | Text/reference 16:9, 4:3, 1:1, 3:4, 9:16, 21:9, adaptive; image adaptive only; default adaptive |
+| `input.output_format` | `--output-format` | mp4 or mov; default mp4 |
+| `input.generate_audio` | `--generate-audio` / `--no-audio` | Boolean; API default true |
+| `input.web_search` | `--web-search` / `--no-web-search` | Boolean; API default false |
+| `input.watermark` | `--watermark` / `--no-watermark` | Text/image only; API default false |
+| `input.first_frame_url` | `--first-frame-url` | Image only; HTTP(S), supported image data URL, or asset:// ID |
+| `input.last_frame_url` | `--last-frame-url` | Image only; requires first frame; HTTP(S) or supported image data URL |
+| `input.reference_image_urls` | Repeat `--reference-image-url` | Image/reference modes; up to 30 |
+| `input.reference_video_urls` | Repeat `--reference-video-url` | Reference mode only; required, 1-10 |
+| `input.reference_audio_urls` | Repeat `--reference-audio-url` | Image/reference modes; up to 10; reference mode also requires video |
+| `callback.url` | `--callback-url` | Optional HTTPS callback |
+| `callback.when` | Set by CLI | Only final |
+| `storage` | `--storage` | temp by default; persistent requires --accept-storage-cost |
+
+Only these fields are exposed. Do not add 4K, draft, last-frame-return, edit or extension parameters.
+
+## Media requirements
+
+- Images: JPEG, PNG, WebP, BMP, TIFF or GIF; under 30 MB each; 300-6000 px per side; aspect ratio 0.4-2.5; up to 30 images and 120 MB combined. GIF uses the first frame.
+- SVG, HEIC and HEIF are unsupported. Asset IDs are allowed only for the image-mode first_frame_url, not last frame or reference images.
+- Reference videos: public HTTPS MP4/MOV; 1-10 clips; 2-30 seconds each, at most 30 seconds combined; under 200 MB each; 24-60 fps; at least 409600 pixels (such as 854x480); 300-6000 px per side; aspect ratio 0.4-2.5.
+- Reference audio: WAV/MP3; up to 10 clips; under 15 MB each; 2-30 seconds each, at most 30 seconds combined.
+
+Some image-schema descriptions retain older format/asset wording. Published HiAPI media preflight is narrower; follow the actual supported formats above.
+Local validation checks URL schemes, obvious unsupported image extensions, data-URL MIME types and counts. It does not inspect remote bytes, size or timeline validity. HiAPI checks the actual media.
+`--reference-video-duration` and `--reference-audio-duration` are optional local metadata, never API fields. If supplied, provide one duration per corresponding URL. Do not invent durations.
+
+## Reference billing and automatic output
+
+Text/image modes use requested output seconds. Reference mode charges the selected per-second rate for reference-video duration plus output-video duration.
+For duration=-1, output length is unknown until completion. Final billing uses server-verified reference and output evidence. Explicit mode uses the selected output duration.
+CLI reference-duration hints are estimates only. Automatic output or missing reference hints return estimatedUsd=null with a range, never a fixed total. Group pricing and promotions may change the account charge.
+
+```bash
+node scripts/hiapi-seedance-2-video.mjs --mode reference --prompt "Use @video1 motion to create a new nature scene" --reference-video-url "https://example.com/reference.mp4" --reference-video-duration 2 --duration -1 --resolution 480p --no-audio --no-web-search --dry-run --estimate
 ```
 
-Headers:
+Remove dry-run/estimate only after the user authorizes paid generation. Recover interrupted work with --resume-task-id rather than creating a replacement.
 
-```text
-Authorization: Bearer $HIAPI_API_KEY
-Content-Type: application/json
-Idempotency-Key: <stable key for this exact submission>
-```
+## Contract sources
 
-## Model IDs
-
-- `seedance-2.5/text-to-video`
-- `seedance-2.5/image-to-video`
-- `seedance-2.5/reference-to-video`
-
-These are independent public model IDs. Do not send the old draft ID `seedance-2-5` or the family-only ID `seedance-2.5`.
-
-## Shared Input
-
-| Field | Contract |
-| --- | --- |
-| `prompt` | Required non-empty string. |
-| `duration` | Integer 4-30; default 5. Billed by requested duration. |
-| `resolution` | Text/image: `720p` or `1080p`, default `720p`. Reference: `480p`, `720p`, or `1080p`, default `480p`. |
-| `output_format` | `mp4` or `mov`; default mp4. |
-| `generate_audio` | Boolean; default true. |
-| `web_search` | Boolean; default false. |
-
-Text and reference modes accept `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `21:9`, or `adaptive`. Image mode currently accepts `adaptive` only and follows the first frame.
-
-## Text-To-Video
-
-```json
-{
-  "model": "seedance-2.5/text-to-video",
-  "input": {
-    "prompt": "A continuous cinematic shot...",
-    "duration": 5,
-    "resolution": "720p",
-    "aspect_ratio": "16:9",
-    "output_format": "mp4",
-    "generate_audio": true,
-    "watermark": false,
-    "web_search": false
-  }
-}
-```
-
-## Image-To-Video
-
-```json
-{
-  "model": "seedance-2.5/image-to-video",
-  "input": {
-    "prompt": "Move from the first frame to the final hero frame...",
-    "duration": 8,
-    "resolution": "720p",
-    "aspect_ratio": "adaptive",
-    "output_format": "mp4",
-    "first_frame_url": "asset://first",
-    "last_frame_url": "asset://last",
-    "reference_image_urls": ["asset://character"],
-    "reference_audio_urls": ["https://example.com/mood.wav"],
-    "generate_audio": true,
-    "watermark": false
-  }
-}
-```
-
-- `last_frame_url` requires `first_frame_url`.
-- Frame images: jpeg/png/webp/bmp/tiff/gif/heic/heif, under 30 MB, each side 300-6000 px, ratio 0.4-2.5.
-- Up to 30 reference images with the same image constraints.
-- Up to 10 reference audio clips; wav/mp3, under 15 MB each, 2-30 seconds each, combined at most 30 seconds.
-
-## Reference-To-Video
-
-```json
-{
-  "model": "seedance-2.5/reference-to-video",
-  "input": {
-    "prompt": "Use @video1 camera movement, @image1 subject, and @audio1 voice...",
-    "duration": 12,
-    "resolution": "720p",
-    "aspect_ratio": "adaptive",
-    "output_format": "mp4",
-    "reference_video_urls": ["https://example.com/motion.mp4"],
-    "reference_image_urls": ["asset://subject"],
-    "reference_audio_urls": ["https://example.com/voice.wav"],
-    "generate_audio": true
-  }
-}
-```
-
-- At least one reference video is required.
-- Up to 10 reference videos; mp4/mov, 24-60 fps, under 200 MB each, 2-30 seconds each, each side 300-6000 px, ratio 0.4-2.5, at least 409,600 total pixels, combined duration at most 30 seconds.
-- Up to 30 reference images.
-- Up to 10 reference audio clips. Audio references require at least one reference video.
-- This model ID is reference-guided generation, not literal editing or extension.
-
-The CLI duration flags are local preflight metadata and are not sent in `input`; the media URLs themselves are sent.
-
-## Callback And Storage
-
-Callbacks are top-level:
-
-```json
-{
-  "model": "seedance-2.5/text-to-video",
-  "input": { "prompt": "..." },
-  "callback": { "url": "https://example.com/hiapi/callback", "when": "final" }
-}
-```
-
-Persistent output storage is also top-level:
-
-```json
-{ "storage": "persistent" }
-```
-
-Persistent storage is billed. The CLI requires `--accept-storage-cost` with `--storage persistent`.
-
-## Public Contract Sources
-
-- `GET https://www.hiapi.ai/api/models/content?name=seedance-2.5%2Ftext-to-video`
-- `GET https://www.hiapi.ai/api/models/content?name=seedance-2.5%2Fimage-to-video`
-- `GET https://www.hiapi.ai/api/models/content?name=seedance-2.5%2Freference-to-video`
-- `GET https://www.hiapi.ai/api/pricing`
+- https://www.hiapi.ai/docs/models/video/seedance-2-5/
+- https://www.hiapi.ai/docs/models/video/seedance-2-5-i2v/
+- https://www.hiapi.ai/docs/models/video/seedance-2-5-r2v/
+- Public schema for each exact model via `https://api.hiapi.ai/api/models/content?name=<encoded-model-id>`
+- https://api.hiapi.ai/api/pricing

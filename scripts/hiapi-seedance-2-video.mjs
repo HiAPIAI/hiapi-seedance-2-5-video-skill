@@ -25,11 +25,11 @@ async function main() {
     return;
   }
 
-  await warnOrRequireSkillUpdate({ allowRecovery: Boolean(options.resumeTaskId || options.dryRun || options.estimate) });
+  if (options.resumeTaskId || options.dryRun || options.estimate) await warnOrRequireSkillUpdate({ allowRecovery: true });
 
   if (options.dryRun || options.estimate) {
     const payload = buildVideoPayload(options);
-    const estimate = options.estimate ? await fetchPricingEstimate(payload) : null;
+    const estimate = options.estimate ? await fetchPricingEstimate(payload, { referenceVideoDurations: options.referenceVideoDurations }) : null;
     console.log(JSON.stringify({
       ok: true,
       paidTaskCreated: false,

@@ -15,7 +15,7 @@ Languages: [English](README.md) | [简体中文](README.zh-CN.md)
 真正有用的视频技能不应只是包一层 API。它要把创意规划和付费动作分开，选对生产模型 ID，保存恢复凭据，并把生成结果带到技术与内容质检。
 
 - 三个生产模型 ID：`seedance-2.5/text-to-video`、`image-to-video`、`reference-to-video`。
-- 对齐线上合同：4-30 秒、按模式支持 480p/720p/1080p，并校验正确的画幅和素材限制。
+- 对齐线上合同：4-30 秒，参考模式支持 -1 自动时长，按模式支持 480p/720p/1080p，并校验画幅和素材限制。
 - 付费前预检：校验脱敏 payload，并从公开价格接口获取当前估价。
 - 防重复扣费：幂等键与 `--resume-task-id`。
 - 长任务可恢复：默认轮询 120 分钟，瞬时网络错误自动退避重试。
@@ -123,7 +123,7 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 
 | 能力 | HiAPI 当前支持 |
 | --- | --- |
-| 时长 | 4-30 秒整数 |
+| 时长 | 4-30 秒整数；参考模式还支持 -1 自动时长 |
 | 文生/图生分辨率 | 720p、1080p；默认 720p |
 | 参考生分辨率 | 480p、720p、1080p；默认 480p |
 | 输出格式 | MP4、MOV |
@@ -135,14 +135,16 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 
 本 Skill 会在选定模式后校验分辨率：文生/图生不会发送 `480p`，参考生仍保留 `480p`。当前公开合同未开放 4K；修改限制前先运行线上合同检查。
 
-## 软升级与硬升级
+## 必须更新到 1.2.0
+
+旧版会拒绝参考视频自动时长，并低估参考视频费用。请重新运行安装命令后再创建付费任务。R2V 按参考视频加输出视频时长计费，自动模式仅给出费用范围。全部参数和限制见 [API 合同](references/api.md)。
 
 运行时先读取 [HiAPI Skills](https://github.com/HiAPIAI/hiapi-skills) 中央清单，再回退读取本仓库的 [`update-policy.json`](update-policy.json)。
 
-- 软升级：提醒后继续执行。
-- 硬升级：仅在合同不兼容、计费/重复提交风险、安全问题或 payload/输出实质错误时阻断新付费任务。
+- 有新版本时，必须更新后才能新建付费任务。
+- 最低版本 1.2.0 用于修正自动时长校验和参考视频计费估价。
 - 即使需要硬升级，也允许恢复已有任务，避免用户产物被困住。
-- 离线或更新检查失败不会阻断工作。
+- 1.2.0 起，离线或跳过版本检查仅允许预检与已有任务恢复，不允许新建付费任务。这是客户端门禁，不会封禁直接 API 调用。
 
 细则见 [references/upgrade-policy.md](references/upgrade-policy.md)。
 
@@ -163,7 +165,7 @@ npm run check:contract
 
 合同检查只读取公开 schema 与价格元数据，不创建任务、不验证 API Key/余额，也不证明上游容量。
 
-GitHub Actions 会在每次改动时运行单测，并每天检查三个公开模型 schema，让合同漂移先暴露，再决定软升级或硬升级。
+GitHub Actions 会在每次改动时运行单测，并每天检查三个公开模型 schema，及时发现参数变化。
 
 ## License
 

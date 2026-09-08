@@ -26,7 +26,7 @@ Restart the Agent, set `HIAPI_API_KEY`, and read `SKILL.md` completely before ta
 - Resume an interrupted task with `--resume-task-id`; do not create a duplicate.
 - Treat raw generation, edited deliverable, uploaded draft, and public publication as separate states.
 - Read `references/workflow.md` for a complete production request.
-- Read `references/upgrade-policy.md` before changing soft/hard upgrade policy.
+- Version 1.2.0 is required for automatic reference duration and correct R2V estimates. Re-run the installer to replace an older copy before new paid creation; recovery remains available. Read `references/upgrade-policy.md` for enforcement details.
 
 ## Verify
 

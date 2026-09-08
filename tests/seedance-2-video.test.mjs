@@ -28,7 +28,7 @@ import {
 
 test("runtime and package versions stay aligned", () => {
   const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-  assert.equal(SKILL_VERSION, "1.1.0");
+  assert.equal(SKILL_VERSION, "1.2.0");
   assert.equal(SKILL_VERSION, packageJson.version);
 });
 
@@ -71,8 +71,8 @@ test("builds image-to-video with first/last frames and optional references", () 
   const payload = buildVideoPayload({
     prompt: "Move between the keyframes",
     firstFrameUrl: image,
-    lastFrameUrl: "asset://last",
-    referenceImageUrls: ["asset://character"],
+    lastFrameUrl: "https://example.com/last.png",
+    referenceImageUrls: ["https://example.com/character.png"],
     referenceAudioUrls: ["https://example.com/music.mp3"],
     referenceAudioDurations: [12],
   });
@@ -89,7 +89,7 @@ test("builds reference-to-video and enforces current reference limits", () => {
     prompt: "Use @video1 motion and @audio1 voice",
     referenceVideoUrls: ["https://example.com/ref.mp4"],
     referenceVideoDurations: [30],
-    referenceImageUrls: ["asset://subject"],
+    referenceImageUrls: ["https://example.com/subject.png"],
     referenceAudioUrls: ["https://example.com/voice.wav"],
     referenceAudioDurations: [30],
   });
@@ -103,10 +103,10 @@ test("builds reference-to-video and enforces current reference limits", () => {
     referenceVideoUrls: ["https://example.com/1.mp4", "https://example.com/2.mp4"],
     referenceVideoDurations: [16, 16],
   }, "reference"), /total duration.*30/i);
-  assert.throws(() => buildVideoPayload({
+  assert.equal(buildVideoPayload({
     prompt: "x",
     referenceVideoUrls: ["https://example.com/ref.mp4"],
-  }), /one --reference-video-duration/i);
+  }).input.duration, 5);
   assert.throws(() => buildVideoPayload({
     prompt: "x",
     referenceVideoUrls: ["https://example.com/ref.mp4"],
@@ -174,6 +174,7 @@ test("preserves HTTP metadata and gives actionable errors", async () => {
 test("sends an idempotency key when creating a paid task", async () => {
   let seenHeaders;
   const fetchImpl = async (_url, options) => {
+    if (_url.includes("githubusercontent")) return new Response(JSON.stringify(JSON.parse(readFileSync(new URL("../update-policy.json", import.meta.url), "utf8"))));
     seenHeaders = options.headers;
     return new Response(JSON.stringify({ data: { taskId: "task-123" } }), { status: 200 });
   };
@@ -225,7 +226,7 @@ test("published policy hard-blocks v1.0.0 creation but preserves recovery", asyn
   const fetchImpl = async () => new Response(JSON.stringify(policy), { status: 200 });
   await assert.rejects(
     () => warnOrRequireSkillUpdate({ currentVersion: "1.0.0", manifestUrls: ["https://x/policy"], fetchImpl }),
-    /required: 1\.1\.0/i,
+    /required: 1\.2\.0/i,
   );
   const recovery = await warnOrRequireSkillUpdate({
     currentVersion: "1.0.0",
@@ -238,7 +239,7 @@ test("published policy hard-blocks v1.0.0 creation but preserves recovery", asyn
 
 test("live contract checker validates all three public schemas", async () => {
   const shared = {
-    prompt: {}, model: {}, duration: { minimum: 4, maximum: 30 },
+    prompt: {}, model: {}, duration: { minimum: 4, maximum: 30, default: 5 },
     generate_audio: {}, output_format: { enum: ["mp4", "mov"] }, web_search: {},
   };
   const generalRatios = ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"];
@@ -253,6 +254,7 @@ test("live contract checker validates all three public schemas", async () => {
     } },
     [MODELS.reference]: { required: ["prompt", "reference_video_urls", "model"], properties: {
       ...shared, resolution: { default: "480p", enum: ["480p", "720p", "1080p"] }, aspect_ratio: { enum: generalRatios },
+      duration: { default: 5, enum: [-1, ...Array.from({length: 27}, (_, i) => i + 4)] },
       reference_video_urls: { minItems: 1, maxItems: 10 },
       reference_image_urls: { maxItems: 30 }, reference_audio_urls: { maxItems: 10 },
     } },

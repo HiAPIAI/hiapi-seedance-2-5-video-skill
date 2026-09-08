@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 — 2026-09-08
+
+- Support reference-mode duration=-1, complete field aliases and explicit false options.
+- Include reference-video duration in estimates; automatic/unknown durations return ranges rather than false fixed totals.
+- Make reference-duration hints optional and correct unsupported image format/asset-ID handling.
+- Require the latest verified version before new paid creation, including direct create-helper use. Keep preflight and existing-task recovery available when update checks cannot run.
+- Refresh the complete parameter map and live contract checks. This release does not change API configuration or create paid tasks.
+
 ## 1.1.0 — 2026-08-24
 
 - Align text-to-video and image-to-video with the live `720p`/`1080p` contract and `720p` default.

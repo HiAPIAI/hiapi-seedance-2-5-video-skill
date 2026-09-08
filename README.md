@@ -15,11 +15,11 @@ Languages: [English](README.md) | [简体中文](README.zh-CN.md)
 A useful video skill is more than a thin API call. This one separates creative planning from a paid side effect, chooses the correct production model ID, preserves recovery handles, and carries the result through technical and creative QC.
 
 - Three production IDs: `seedance-2.5/text-to-video`, `image-to-video`, and `reference-to-video`.
-- Live-aligned validation: 4-30 seconds, mode-specific 480p/720p/1080p, correct ratios and media limits.
+- Live-aligned validation: 4-30 seconds, automatic -1 in reference mode, mode-specific 480p/720p/1080p, correct ratios and media limits.
 - Cost-aware preflight: validate a redacted payload and fetch current public pricing before submitting.
 - Duplicate-charge protection: idempotency keys and `--resume-task-id`.
 - Long-job resilience: 120-minute default polling with transient retry.
-- Upgrade control: soft notices for compatible releases; hard stops only for unsafe/incompatible creation.
+- Required updates: new paid tasks require the latest verified skill; existing-task recovery remains available.
 - Full workflow: brief, sources, prompt, estimate, generation, recovery, download, QC, edit, and publish gate.
 
 ## Install
@@ -123,7 +123,7 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 
 | Capability | Current HiAPI support |
 | --- | --- |
-| Duration | Integer 4-30 seconds |
+| Duration | Integer 4-30 seconds; reference mode also accepts -1 for automatic output |
 | Text/image resolution | 720p, 1080p; default 720p |
 | Reference resolution | 480p, 720p, 1080p; default 480p |
 | Output | MP4, MOV |
@@ -135,14 +135,16 @@ node scripts/hiapi-seedance-2-video.mjs --resume-task-id "tk-hiapi-..."
 
 The skill validates resolution after selecting the mode: text/image requests cannot send `480p`, while reference mode retains it. The current public contract does not expose 4K. Run the live check before changing these limits.
 
-## Soft And Hard Upgrades
+## Required Update to 1.2.0
+
+Older releases reject automatic reference duration and underestimate reference-video charges. Re-run the installer before creating another paid task. R2V bills reference plus output duration; automatic estimates are ranges. See the [complete parameter map](references/api.md).
 
 The runtime reads the central [HiAPI Skills](https://github.com/HiAPIAI/hiapi-skills) manifest and falls back to this repository's [`update-policy.json`](update-policy.json).
 
-- Soft upgrade: notify and continue.
-- Hard upgrade: block new paid tasks only for incompatibility, billing/duplication risk, security, or materially wrong payload/output behavior.
+- A newer published version must be installed before creating another paid task.
+- The 1.2.0 minimum fixes incompatible duration validation and reference-video billing estimates.
 - Existing-task recovery stays available during a hard upgrade.
-- Offline update-check failure does not block work.
+- From 1.2.0, offline or disabled checks allow preflight and recovery only, not new paid creation. This is a client-side gate, not an API access restriction.
 
 See [references/upgrade-policy.md](references/upgrade-policy.md).
 

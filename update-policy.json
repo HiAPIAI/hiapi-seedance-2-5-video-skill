@@ -1,11 +1,11 @@
 {
   "id": "hiapi-seedance-2-5-video",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "updatePolicy": {
-    "latestVersion": "1.1.0",
-    "minimumVersion": "1.1.0",
+    "latestVersion": "1.2.0",
+    "minimumVersion": "1.2.0",
     "updateCommand": "npx -y github:HiAPIAI/hiapi-seedance-2-5-video-skill -y",
-    "notice": "A newer HiAPI Seedance 2.5 skill is available with the current mode-specific 720p/1080p contract.",
-    "requiredNotice": "HiAPI Seedance 2.5 resolution support changed by mode. Version 1.0.0 can reject valid 1080p requests and can submit unsupported 480p text/image requests. Update before creating another paid task. Existing task recovery remains available."
+    "notice": "Update to Seedance 2.5 skill 1.2.0 before creating a new task.",
+    "requiredNotice": "Versions before 1.2.0 reject automatic reference-video duration and underestimate reference-video charges. Update to 1.2.0 before creating a new paid task. Existing task recovery and non-billing validation remain available."
   }
 }

@@ -1,53 +1,22 @@
-# Soft And Hard Upgrade Policy
+# Required updates
 
-The runtime checks the central HiAPI skills manifest first and this repository's `update-policy.json` second. The repository fallback makes upgrade control available even before a directory change is merged.
+Version 1.2.0 is the minimum supported release. Older releases reject automatic reference duration and underestimate reference-video billing.
 
-## Version Fields
+Before new paid creation, the CLI and exported create helper check the central hiapi-skills entry first, then this repository policy if the central source is unavailable or missing the entry. The installed version must be at least latestVersion and minimumVersion. An outdated or unverifiable installation stops before POST /v1/tasks.
 
-- `version`: version shipped by the repository.
-- `latestVersion`: newest recommended version.
-- `minimumVersion`: oldest version permitted to create new paid tasks.
+Update with `npx -y github:HiAPIAI/hiapi-seedance-2-5-video-skill -y`.
 
-## Soft Upgrade
+## Recovery and offline use
 
-Set `latestVersion` above the installed version while keeping `minimumVersion` compatible.
+Dry-run, pricing lookup, schema checks and existing-task recovery/download remain available.
+From 1.2.0, manifest failure or HIAPI_SKIP_UPDATE_CHECK=1 cannot authorize new paid creation. This latest-only rule was explicitly requested for this release. An update-source outage affects creation, not recovery.
 
-Use for:
+## Enforcement limits
 
-- new modes or optional fields;
-- better prompts/workflow/QC;
-- clearer errors and docs;
-- performance or reliability improvements that do not make the installed version unsafe.
+This gate runs in the client, not in the API. Already-installed old scripts may include offline/skip-check paths. Users can modify local files or call the API directly.
+Publishing the central minimum blocks normal online use of older clients that implement the check; it cannot replace or revoke every installed script. Do not claim server-side enforcement or change API configuration to enforce an update.
 
-Behavior: print the notice and continue.
+## Release order
 
-## Hard Upgrade
-
-Raise `minimumVersion` only when continued task creation is materially unsafe or incompatible:
-
-- model ID or required-field contract changed;
-- old code can misprice, double-submit, or silently lose paid output;
-- security/privacy issue;
-- old code generates the wrong mode or materially wrong payload;
-- a provider/API migration rejects or misroutes all old requests.
-
-Behavior: block new paid task creation and print the exact update command. Recovery of an existing task remains allowed.
-
-Do not use a hard upgrade simply to increase adoption of a new feature.
-
-## Release Sequence
-
-1. Update runtime `SKILL_VERSION` and `package.json` together.
-2. Add tests for the compatibility change.
-3. Update `CHANGELOG.md`, English/Chinese README, `SKILL.md`, and affected references.
-4. Run unit tests and the live contract check.
-5. Publish the new repository version.
-6. Change `update-policy.json` only after the new version is publicly installable.
-7. Update the central `HiAPIAI/hiapi-skills` manifest to the same policy.
-8. Verify an older compatible client receives a soft notice and an older incompatible client receives a hard stop.
-
-## Failure Behavior
-
-- Manifest timeout, offline mode, invalid JSON, or missing entry does not block tasks.
-- `HIAPI_SKIP_UPDATE_CHECK=1` explicitly skips checks for offline/locked-down environments.
-- A hard-upgrade message must say why the old version is unsafe and give one copyable update command.
+Publish an installable runtime and repository policy, verify a clean public installation, then publish the identical central policy. Keep package version, SKILL_VERSION, update-policy.json and central skills.json aligned.
+Required releases raise latestVersion and minimumVersion together. Test that blocked creation performs zero paid POSTs and that recovery remains available.

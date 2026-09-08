@@ -52,19 +52,21 @@ Reference-to-video is reference-guided generation, not literal video editing or 
 
 ## Current HiAPI Contract
 
-- Duration: integer `4`-`30` seconds.
+- Duration: integer `4`-`30` seconds; reference mode also accepts `-1` for automatic output. Default 5.
 - Text/image resolution: `720p` or `1080p`; default `720p`.
 - Reference resolution: `480p`, `720p`, or `1080p`; default `480p`.
 - Output format: `mp4` or `mov`.
 - Text/reference ratios: `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `21:9`, `adaptive`.
 - Image-to-video ratio: `adaptive` only; output follows the first frame.
 - Native audio: on by API default; use `--generate-audio` or `--no-audio` when the choice matters.
-- Reference images: up to 30.
+- Reference images: up to 30; JPEG/PNG/WebP/BMP/TIFF/GIF. SVG, HEIC, HEIF and reference asset IDs are unsupported. Only the image-mode first frame may use an asset ID.
 - Reference videos: up to 10, each 2-30 seconds, combined duration at most 30 seconds.
 - Reference audio: up to 10, each 2-30 seconds, combined duration at most 30 seconds.
 - Text/image modes support an optional watermark; reference mode currently does not.
 
 Do not send `480p` for text/image mode or advertise 4K for the current HiAPI contract. Re-run the live contract check before changing these limits.
+
+Read `references/api.md` for every exposed field, CLI mapping and media constraint. Reference-duration flags are optional estimate hints, never trusted billing inputs. R2V charges reference-video duration plus output-video duration; automatic output must be estimated as a range, not a fixed total.
 
 ## Paid-Task Preflight
 
@@ -184,10 +186,11 @@ Persistent HiAPI storage is billed. Use it only after telling the user and pass 
 
 Every new task checks the HiAPI skills directory, then this repository's `update-policy.json` fallback:
 
-- **Soft upgrade:** prints a notice and continues. Use for new features, workflow improvements, and backward-compatible fixes.
-- **Hard upgrade:** blocks creation of new paid tasks. Use only for contract incompatibility, billing risk, duplicated-task risk, security issues, or materially wrong outputs.
+- **Required update:** use 1.2.0 or the published latest version before creating a new paid task. Both the CLI and exported create helper enforce this check.
 - **Recovery exception:** an existing task may still be resumed/downloaded during a hard upgrade so user output is not stranded.
-- **Offline behavior:** update-check failure does not block work. `HIAPI_SKIP_UPDATE_CHECK=1` is only for offline or locked-down environments.
+- **Offline behavior:** failed or disabled update checks allow preflight and recovery, but block new paid tasks. Restore update access before creating a task.
+
+The central policy blocks normal online use of old versions. It cannot revoke local scripts that bypass checks or stop direct API calls.
 
 Read `references/upgrade-policy.md` before releasing an update.
 

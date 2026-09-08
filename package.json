@@ -1,6 +1,6 @@
 {
   "name": "hiapi-seedance-2-5-video-skill",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "HiAPI Seedance 2.5 text, image, and reference video production skill for AI agents",
   "type": "module",
   "private": true,

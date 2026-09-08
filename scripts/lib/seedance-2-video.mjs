@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
 export const SKILL_ID = "hiapi-seedance-2-5-video";
-export const SKILL_VERSION = "1.1.0";
+export const SKILL_VERSION = "1.2.0";
 export const DEFAULT_BASE_URL = "https://api.hiapi.ai";
 export const DEFAULT_SITE_URL = "https://www.hiapi.ai";
 export const DEFAULT_SKILLS_MANIFEST_URL = "https://raw.githubusercontent.com/HiAPIAI/hiapi-skills/main/skills.json";
@@ -84,7 +84,10 @@ export function resolveMode(options = {}) {
   const audioRefs = normalizeList(options.referenceAudioUrls);
   const hasFrames = Boolean(cleanMedia(options.firstFrameUrl || options.inputReference) || cleanMedia(options.lastFrameUrl));
   const inferred = videoRefs.length > 0 ? "reference" : (hasFrames || imageRefs.length > 0 || audioRefs.length > 0 ? "image" : "text");
-  const explicit = options.mode ? normalizeMode(options.mode) : inferred;
+  const modelMode = options.model ? Object.keys(MODELS).find((mode) => MODELS[mode] === options.model) : null;
+  if (options.model && !modelMode) throw new Error(`Unsupported model ID: ${options.model}`);
+  if (modelMode && options.mode && normalizeMode(options.mode) !== modelMode) throw new Error("--model and --mode disagree.");
+  const explicit = options.mode ? normalizeMode(options.mode) : (modelMode || inferred);
 
   if (explicit === "text" && (hasFrames || imageRefs.length || videoRefs.length || audioRefs.length)) {
     throw new Error("Text-to-video cannot include frame or reference media.");
@@ -98,8 +101,9 @@ export function resolveMode(options = {}) {
   return explicit;
 }
 
-export function normalizeSeconds(value = DEFAULT_SECONDS) {
+export function normalizeSeconds(value = DEFAULT_SECONDS, mode = "text") {
   const seconds = Number(value);
+  if (seconds === -1 && mode === "reference") return seconds;
   if (!Number.isInteger(seconds) || seconds < MIN_SECONDS || seconds > MAX_SECONDS) {
     throw new Error(`Unsupported duration "${value}". Use an integer from ${MIN_SECONDS} to ${MAX_SECONDS}.`);
   }
@@ -175,6 +179,7 @@ function validateTimedReferences(label, urls, durations) {
     return;
   }
   const rawDurations = Array.isArray(durations) ? durations : (durations === undefined ? [] : [durations]);
+  if (rawDurations.length === 0) return;
   if (rawDurations.length !== urls.length) {
     throw new Error(`Provide one --${label.replaceAll(" ", "-")}-duration for each --${label.replaceAll(" ", "-")}-url.`);
   }
@@ -217,9 +222,29 @@ export function normalizeMediaOptions(options = {}, mode = resolveMode(options))
     throw new Error("Reference audio must be provided together with at least one reference video.");
   }
 
+  if (firstFrameUrl) validateMediaUrl(firstFrameUrl, "first_frame_url", "image", true);
+  if (lastFrameUrl) validateMediaUrl(lastFrameUrl, "last_frame_url", "image");
+  for (const url of referenceImageUrls) validateMediaUrl(url, "reference_image_urls", "image");
+  for (const url of referenceVideoUrls) validateMediaUrl(url, "reference_video_urls", "video");
+  for (const url of referenceAudioUrls) validateMediaUrl(url, "reference_audio_urls", "audio");
+
   validateTimedReferences("reference video", referenceVideoUrls, options.referenceVideoDurations);
   validateTimedReferences("reference audio", referenceAudioUrls, options.referenceAudioDurations);
   return { firstFrameUrl, lastFrameUrl, referenceImageUrls, referenceVideoUrls, referenceAudioUrls };
+}
+
+function validateMediaUrl(value, field, kind, allowAsset = false) {
+  if (allowAsset && /^asset:\/\/[A-Za-z0-9][A-Za-z0-9._:/-]{0,511}$/.test(value)) return;
+  if (kind === "image" && value.startsWith("data:")) {
+    if (!/^data:image\/(?:jpeg|png|webp|bmp|tiff|gif);base64,/i.test(value)) throw new Error(`${field} supports JPEG, PNG, WebP, BMP, TIFF and GIF data URLs only.`);
+    return;
+  }
+  let url;
+  try { url = new URL(value); } catch { throw new Error(`${field} must be a media URL.`); }
+  if (!(kind === "video" ? ["https:"] : ["http:", "https:"]).includes(url.protocol) || url.username || url.password || (kind === "video" && url.port)) {
+    throw new Error(`${field} requires a ${kind === "video" ? "public HTTPS" : "HTTP(S)"} URL; asset IDs are supported only for first_frame_url.`);
+  }
+  if (kind === "image" && /\.(svg|heic|heif)$/i.test(url.pathname)) throw new Error(`${field} does not support SVG, HEIC or HEIF.`);
 }
 
 export function buildVideoPayload(options = {}) {
@@ -229,7 +254,7 @@ export function buildVideoPayload(options = {}) {
   const media = normalizeMediaOptions(options, mode);
   const input = {
     prompt,
-    duration: normalizeSeconds(options.seconds),
+    duration: normalizeSeconds(options.seconds, mode),
     resolution: normalizeResolution(options.resolution, mode),
     aspect_ratio: normalizeRatio(options.ratio, mode),
     output_format: normalizeOutputFormat(options.outputFormat),
@@ -256,6 +281,9 @@ export function buildVideoPayload(options = {}) {
     payload.storage = "persistent";
   }
   if (options.callbackUrl) {
+    let callbackUrl;
+    try { callbackUrl = new URL(String(options.callbackUrl).trim()); } catch { throw new Error("callback.url must be a valid HTTPS URL."); }
+    if (callbackUrl.protocol !== "https:" || callbackUrl.username || callbackUrl.password) throw new Error("callback.url must be a valid HTTPS URL without embedded credentials.");
     payload.callback = { url: String(options.callbackUrl).trim(), when: "final" };
   }
   return payload;
@@ -307,7 +335,7 @@ export function buildHttpErrorMessage(status, body) {
     return `${prefix}\nCheck balance at ${HIAPI_DASHBOARD_URL} and pricing at ${HIAPI_PRICING_URL}.`;
   }
   if (status === 400 || lower.includes("invalid")) {
-    return `${prefix}\nRun --dry-run --estimate and check the selected mode, 4-30s duration, mode-specific resolution, media counts, formats, sizes, and reference durations.`;
+    return `${prefix}\nRun --dry-run --estimate and check the selected mode, 4-30s duration (or -1 in reference mode), mode-specific resolution, media counts, formats, sizes, and reference durations.`;
   }
   if (status === 429) return `${prefix}\nWait and retry, or reduce concurrent video tasks.`;
   return prefix;
@@ -344,6 +372,7 @@ export function extractVideoUrl(response) {
 }
 
 export async function createVideoTask(payload, config = resolveConfig(), options = {}) {
+  await warnOrRequireSkillUpdate({ fetchImpl: options.fetchImpl || fetch });
   const idempotencyKey = String(options.idempotencyKey || randomUUID()).trim();
   const headers = {
     Authorization: `Bearer ${config.apiKey}`,
@@ -425,7 +454,7 @@ export async function generateVideo(options = {}, config = resolveConfig()) {
     console.error(`HiAPI idempotency key: ${idempotencyKey}`);
     let created;
     try {
-      created = await createVideoTask(payload, config, { idempotencyKey });
+      created = await createVideoTask(payload, config, { idempotencyKey, fetchImpl: options.fetchImpl });
     } catch (error) {
       if (error.message.startsWith("Network request failed")) {
         throw new Error(`${error.message}\nSubmission acceptance is unknown. Do not create a new paid task blindly; retry with --idempotency-key ${idempotencyKey}.`);
@@ -465,15 +494,28 @@ export async function fetchPricingEstimate(payload, options = {}) {
   const unitUsd = Number(matchingPolicy?.usd_value ?? model.base_usd_value);
   if (!Number.isFinite(unitUsd)) throw new Error(`Pricing for ${payload.model} is not a numeric per-second rate.`);
   const duration = Number(payload.input.duration);
+  const referenceMode = payload.model === MODELS.reference;
+  const referenceDurations = options.referenceVideoDurations === undefined ? [] : (Array.isArray(options.referenceVideoDurations) ? options.referenceVideoDurations : [options.referenceVideoDurations]);
+  if (referenceMode) validateTimedReferences("reference video", payload.input.reference_video_urls, referenceDurations);
+  const referenceSeconds = referenceMode && referenceDurations?.length ? referenceDurations.map(Number).reduce((a, b) => a + b, 0) : null;
+  const minimumReferenceSeconds = referenceSeconds ?? (payload.input.reference_video_urls?.length || 0) * MIN_REFERENCE_MEDIA_SECONDS;
+  const maximumReferenceSeconds = referenceSeconds ?? MAX_REFERENCE_MEDIA_TOTAL_SECONDS;
+  const totalSeconds = referenceMode ? (duration === -1 || referenceSeconds === null ? null : referenceSeconds + duration) : duration;
   return {
     model: payload.model,
     resolution: payload.input.resolution,
     duration,
     unitUsd,
-    estimatedUsd: Number((unitUsd * duration).toFixed(4)),
+    referenceSeconds,
+    estimatedUsd: totalSeconds === null ? null : Number((unitUsd * totalSeconds).toFixed(4)),
+    ...(referenceMode && totalSeconds === null ? { estimatedUsdRange: {
+      minimum: Number((unitUsd * (minimumReferenceSeconds + (duration === -1 ? MIN_SECONDS : duration))).toFixed(4)),
+      maximum: Number((unitUsd * (maximumReferenceSeconds + (duration === -1 ? MAX_SECONDS : duration))).toFixed(4)),
+    } } : {}),
+    billingBasis: referenceMode ? "reference-video duration + output-video duration" : "requested output duration",
     billingUnit: model.base_display_unit?.en || "per second",
     pricingPage: HIAPI_PRICING_URL,
-    note: "Estimate from the current public pricing endpoint; final billing follows the accepted task parameters.",
+    note: referenceMode ? "Reference durations supplied to the CLI are estimates only. Final billing uses server-verified reference duration plus output duration; automatic output length is unknown before completion." : "Estimate from the current public pricing endpoint; final billing follows the accepted task parameters.",
   };
 }
 
@@ -532,8 +574,12 @@ export async function checkLiveContract(options = {}) {
     const missingRatios = contract.ratios.filter((value) => !ratios.includes(value));
     const ok = missingRequired.length === 0
       && missingProperties.length === 0
-      && duration.minimum === MIN_SECONDS
-      && duration.maximum === MAX_SECONDS
+      && (model === MODELS.reference
+        ? Array.isArray(duration.enum) && duration.enum.length === 28 && [-1, ...Array.from({ length: 27 }, (_, i) => i + 4)].every((value) => duration.enum.includes(value))
+        : duration.minimum === MIN_SECONDS && duration.maximum === MAX_SECONDS)
+      && duration.default === DEFAULT_SECONDS
+      && (schema.required || []).length === contract.required.length
+      && Object.keys(schema.properties || {}).length === contract.properties.length
       && contract.resolutions.length === resolutions.length
       && contract.resolutions.every((value) => resolutions.includes(value))
       && schema.properties?.resolution?.default === contract.defaultResolution
@@ -548,7 +594,7 @@ export async function checkLiveContract(options = {}) {
       ok,
       missingRequired,
       missingProperties,
-      duration: [duration.minimum, duration.maximum],
+      duration: duration.enum || [duration.minimum, duration.maximum],
       resolutions,
       resolutionDefault: schema.properties?.resolution?.default,
       ratios,
@@ -561,7 +607,7 @@ export async function checkLiveContract(options = {}) {
 
 export async function checkSkillUpdate(options = {}) {
   const env = options.env || process.env;
-  if (["1", "true"].includes(String(env.HIAPI_SKIP_UPDATE_CHECK || "").toLowerCase())) return { status: "skipped" };
+  if (["1", "true"].includes(String(env.HIAPI_SKIP_UPDATE_CHECK || "").toLowerCase())) return { status: "unverified", message: `Version verification is disabled. New paid tasks require the latest skill. Enable update checks and run: ${UPDATE_COMMAND}` };
   const urls = options.manifestUrls || [
     env.HIAPI_SKILLS_MANIFEST_URL || DEFAULT_SKILLS_MANIFEST_URL,
     env.HIAPI_SKILL_POLICY_URL || DEFAULT_REPOSITORY_POLICY_URL,
@@ -573,14 +619,16 @@ export async function checkSkillUpdate(options = {}) {
       ? manifest.skills.find((entry) => entry?.id === (options.skillId || SKILL_ID))
       : (manifest.id === (options.skillId || SKILL_ID) ? manifest : null);
     if (!skill?.updatePolicy) continue;
+    const { latestVersion, minimumVersion } = skill.updatePolicy;
+    if (![latestVersion, minimumVersion].every((value) => typeof value === "string" && /^\d+\.\d+\.\d+$/.test(value)) || compareVersions(latestVersion, minimumVersion) < 0) continue;
     return evaluateUpdatePolicy(skill, options.currentVersion || SKILL_VERSION);
   }
-  return { status: "current" };
+  return { status: "unverified", message: `Could not verify the latest skill version. No paid task was created. Restore access to the update sources and retry; existing task recovery remains available. Update: ${UPDATE_COMMAND}` };
 }
 
 async function fetchManifest(url, options) {
   const controller = typeof AbortController === "function" ? new AbortController() : null;
-  const timer = controller ? setTimeout(() => controller.abort(), options.timeoutMs || 1_500) : null;
+  const timer = controller ? setTimeout(() => controller.abort(), options.timeoutMs || 5_000) : null;
   try {
     const response = await (options.fetchImpl || fetch)(url, { headers: { Accept: "application/json" }, signal: controller?.signal });
     if (!response.ok) return null;
@@ -610,8 +658,8 @@ function evaluateUpdatePolicy(skill, currentVersion) {
 
 export async function warnOrRequireSkillUpdate(options = {}) {
   const result = await checkSkillUpdate(options);
-  if (result.status === "required" && !options.allowRecovery) throw new Error(result.message);
-  if (["required", "available"].includes(result.status) && result.message) console.error(result.message);
+  if (["required", "available", "unverified"].includes(result.status) && !options.allowRecovery) throw new Error(result.message);
+  if (["required", "available", "unverified"].includes(result.status) && result.message) console.error(result.message);
   return result;
 }
 
@@ -635,8 +683,8 @@ export function parseArgs(argv) {
     ["--reference-audio-duration", "referenceAudioDurations"],
   ]);
   const values = new Map([
-    ["--prompt", "prompt"], ["--mode", "mode"], ["--seconds", "seconds"], ["--resolution", "resolution"],
-    ["--ratio", "ratio"], ["--output-format", "outputFormat"], ["--input-reference", "inputReference"],
+    ["--prompt", "prompt"], ["--mode", "mode"], ["--model", "model"], ["--seconds", "seconds"], ["--duration", "seconds"], ["--resolution", "resolution"],
+    ["--ratio", "ratio"], ["--aspect-ratio", "ratio"], ["--output-format", "outputFormat"], ["--input-reference", "inputReference"],
     ["--first-frame-url", "firstFrameUrl"], ["--last-frame-url", "lastFrameUrl"], ["--output-dir", "outputDir"],
     ["--timeout-minutes", "timeoutMinutes"], ["--storage", "storage"], ["--callback-url", "callbackUrl"],
     ["--resume-task-id", "resumeTaskId"], ["--idempotency-key", "idempotencyKey"],
@@ -650,6 +698,7 @@ export function parseArgs(argv) {
     else if (arg === "--generate-audio") options.generateAudio = true;
     else if (arg === "--no-audio" || arg === "--no-generate-audio") options.generateAudio = false;
     else if (arg === "--web-search") options.webSearch = true;
+    else if (arg === "--no-web-search") options.webSearch = false;
     else if (arg === "--watermark") options.watermark = true;
     else if (arg === "--no-watermark") options.watermark = false;
     else if (arg === "--no-save") options.save = false;
@@ -686,7 +735,8 @@ Recover an existing paid task (does not create another task):
 Core options:
   --mode <text|image|reference>       Usually inferred from media inputs
   --prompt <text>                     Required for new tasks
-  --seconds <4-30>                    Default: 5
+  --model <exact-model-id>            Alternative to --mode
+  --seconds, --duration <-1|4-30>      Default: 5; -1 is reference mode only
   --resolution <480p|720p|1080p>      Text/image: 720p or 1080p (default 720p); reference: 480p, 720p, or 1080p (default 480p)
   --ratio <16:9|4:3|1:1|3:4|9:16|21:9|adaptive>  Default: adaptive
   --output-format <mp4|mov>           Default: mp4
@@ -694,11 +744,11 @@ Core options:
   --last-frame-url <url>              Requires first frame
   --reference-image-url <url>         Repeatable; max 30
   --reference-video-url <url>         Repeatable; max 10; selects reference-to-video
-  --reference-video-duration <2-30>   One per reference video; total <= 30s
+  --reference-video-duration <2-30>   Optional estimate metadata; if supplied, one per video; total <= 30s
   --reference-audio-url <url>         Repeatable; max 10
-  --reference-audio-duration <2-30>   One per reference audio; total <= 30s
+  --reference-audio-duration <2-30>   Optional local metadata; if supplied, one per audio; total <= 30s
   --generate-audio | --no-audio       API default: audio on
-  --web-search                        Enable supported web grounding
+  --web-search | --no-web-search      Set web grounding explicitly
   --watermark | --no-watermark        Text/image modes only
   --dry-run                           Validate and print a redacted payload; no paid task
   --estimate                          Fetch current public per-second pricing

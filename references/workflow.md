@@ -68,12 +68,12 @@ Run `--dry-run --estimate`.
 Check:
 
 - inferred mode and exact model ID;
-- 4-30 second integer duration;
+- 4-30 second integer duration, or -1 for automatic output in reference mode;
 - mode-specific resolution: text/image `720p` or `1080p`; reference `480p`, `720p`, or `1080p`;
 - ratio compatibility;
 - audio and watermark decisions;
 - input counts, formats, sizes, durations, and ordering;
-- current estimated total;
+- current unit rate and estimate; include reference-video seconds for R2V, and use a range for automatic output or unknown reference lengths;
 - temporary versus billed persistent storage.
 
 Obtain confirmation when the user has not already approved this exact paid setup.

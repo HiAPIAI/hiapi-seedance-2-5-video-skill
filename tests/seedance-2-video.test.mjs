@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import {
+  DEFAULT_SITE_URL,
   MODELS,
   SKILL_VERSION,
   buildHttpErrorMessage,
@@ -28,7 +29,7 @@ import {
 
 test("runtime and package versions stay aligned", () => {
   const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-  assert.equal(SKILL_VERSION, "1.2.0");
+  assert.equal(SKILL_VERSION, "1.2.1");
   assert.equal(SKILL_VERSION, packageJson.version);
 });
 
@@ -235,6 +236,27 @@ test("published policy hard-blocks v1.0.0 creation but preserves recovery", asyn
     allowRecovery: true,
   });
   assert.equal(recovery.status, "required");
+});
+
+test("default public pricing and metadata endpoints use the api host", async () => {
+  assert.equal(DEFAULT_SITE_URL, "https://api.hiapi.ai");
+  const requested = [];
+  const fetchImpl = async (url) => {
+    requested.push(String(url));
+    return new Response(JSON.stringify({ data: [{
+      model_name: MODELS.text, base_usd_value: 0.1395,
+      policies: [{ rule: { resolution: { match: "720p" } }, usd_value: 0.3019 }],
+    }] }), { status: 200 });
+  };
+  const saved = process.env.HIAPI_SITE_URL;
+  delete process.env.HIAPI_SITE_URL;
+  try {
+    await fetchPricingEstimate(buildVideoPayload({ prompt: "x", seconds: 10, resolution: "720p" }), { fetchImpl });
+  } finally {
+    if (saved !== undefined) process.env.HIAPI_SITE_URL = saved;
+  }
+  assert.ok(requested.length > 0, "pricing requests were issued");
+  assert.ok(requested.every((url) => url.startsWith("https://api.hiapi.ai/api/")), requested.join(", "));
 });
 
 test("live contract checker validates all three public schemas", async () => {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 — 2026-11-07
+
+- Read public pricing and no-key model schemas from `https://api.hiapi.ai`. `DEFAULT_SITE_URL` points at the API host because `https://www.hiapi.ai/api/...` redirects to `https://hiapi.ai/api/...` and returns 404, which broke estimates and the live contract check.
+- **Soft upgrade**: `latestVersion` is 1.2.1 and `minimumVersion` remains 1.2.0.
+
 ## 1.2.0 — 2026-09-08
 
 - Support reference-mode duration=-1, complete field aliases and explicit false options.

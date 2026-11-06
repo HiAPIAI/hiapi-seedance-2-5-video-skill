@@ -1,11 +1,11 @@
 {
   "id": "hiapi-seedance-2-5-video",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "updatePolicy": {
-    "latestVersion": "1.2.0",
+    "latestVersion": "1.2.1",
     "minimumVersion": "1.2.0",
     "updateCommand": "npx -y github:HiAPIAI/hiapi-seedance-2-5-video-skill -y",
-    "notice": "Update to Seedance 2.5 skill 1.2.0 before creating a new task.",
+    "notice": "Seedance 2.5 skill 1.2.1 fixes price estimates and contract checks: public endpoints moved to api.hiapi.ai.",
     "requiredNotice": "Versions before 1.2.0 reject automatic reference-video duration and underestimate reference-video charges. Update to 1.2.0 before creating a new paid task. Existing task recovery and non-billing validation remain available."
   }
 }

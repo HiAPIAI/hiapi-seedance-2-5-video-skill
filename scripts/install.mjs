@@ -12,8 +12,8 @@ import readline from 'node:readline/promises';
 const SKILL_FOLDER = 'hiapi-seedance-2-5-video';
 const REPO_URL = 'https://github.com/HiAPIAI/hiapi-seedance-2-5-video-skill.git';
 const DISPLAY_NAME = 'HiAPI Seedance 2.5 Video Skill';
-const MODEL_PAGE = 'https://docs.hiapi.ai/models/video/seedance-2-5/';
-const API_KEY_PAGE = 'https://www.hiapi.ai/en/dashboard/api-keys';
+const MODEL_PAGE = 'https://docs.hiapi.ai/models/video/seedance-2-5/?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video';
+const API_KEY_PAGE = 'https://www.hiapi.ai/en/dashboard/api-keys?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video';
 
 const argList = argv.slice(2);
 const yes = argList.includes('-y') || argList.includes('--yes') || !stdin.isTTY;

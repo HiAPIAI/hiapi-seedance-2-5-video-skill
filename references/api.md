@@ -53,8 +53,8 @@ Remove dry-run/estimate only after the user authorizes paid generation. Recover 
 
 ## Contract sources
 
-- https://www.hiapi.ai/docs/models/video/seedance-2-5/
-- https://www.hiapi.ai/docs/models/video/seedance-2-5-i2v/
-- https://www.hiapi.ai/docs/models/video/seedance-2-5-r2v/
+- https://www.hiapi.ai/docs/models/video/seedance-2-5/?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video
+- https://www.hiapi.ai/docs/models/video/seedance-2-5-i2v/?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video
+- https://www.hiapi.ai/docs/models/video/seedance-2-5-r2v/?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video
 - Public schema for each exact model via `https://api.hiapi.ai/api/models/content?name=<encoded-model-id>`
 - https://api.hiapi.ai/api/pricing

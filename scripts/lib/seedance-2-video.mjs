@@ -46,9 +46,9 @@ export const POLL_INTERVAL_MS = 5_000;
 export const DEFAULT_OUTPUT_DIR = "outputs";
 export const DEFAULT_STORAGE = "temp";
 export const SUPPORTED_STORAGE = new Set(["temp", "persistent"]);
-export const HIAPI_API_KEYS_URL = "https://www.hiapi.ai/en/dashboard/api-keys";
-export const HIAPI_DASHBOARD_URL = "https://www.hiapi.ai/en/dashboard";
-export const HIAPI_PRICING_URL = "https://www.hiapi.ai/en/pricing";
+export const HIAPI_API_KEYS_URL = "https://www.hiapi.ai/en/dashboard/api-keys?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video";
+export const HIAPI_DASHBOARD_URL = "https://www.hiapi.ai/en/dashboard?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video";
+export const HIAPI_PRICING_URL = "https://www.hiapi.ai/en/pricing?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video";
 
 const TERMINAL_FAILURES = new Set(["fail", "failed", "error", "cancelled", "canceled"]);
 
@@ -276,7 +276,7 @@ export function buildVideoPayload(options = {}) {
   const storage = normalizeStorage(options.storage);
   if (storage === "persistent") {
     if (!options.acceptStorageCost) {
-      throw new Error('Persistent storage is billed. Re-run with --accept-storage-cost after reviewing https://docs.hiapi.ai/storage/.');
+      throw new Error('Persistent storage is billed. Re-run with --accept-storage-cost after reviewing https://docs.hiapi.ai/storage/?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video.');
     }
     payload.storage = "persistent";
   }

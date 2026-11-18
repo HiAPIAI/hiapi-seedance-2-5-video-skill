@@ -17,9 +17,9 @@ Use this skill when the user wants Seedance 2.5 generation through HiAPI or want
 
 Links:
 
-- API key: https://www.hiapi.ai/en/dashboard/api-keys?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video
-- Pricing: https://www.hiapi.ai/en/pricing?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video
-- Docs: https://docs.hiapi.ai/models/video/seedance-2-5/?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video
+- API key: https://www.hiapi.ai/en/dashboard/api-keys
+- Pricing: https://www.hiapi.ai/en/pricing
+- Docs: https://docs.hiapi.ai/models/video/seedance-2-5/
 - Prompt gallery: https://github.com/HiAPIAI/awesome-ai-video-prompts
 
 Never invent a result, task status, price, or downloaded path. Never submit a second paid task merely because polling or downloading was interrupted.
@@ -206,9 +206,9 @@ This checks public contract compatibility. It does not prove the API key, accoun
 
 ## Error Guidance
 
-- Missing key: create/copy a key from https://www.hiapi.ai/en/dashboard/api-keys?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video.
+- Missing key: create/copy a key from https://www.hiapi.ai/en/dashboard/api-keys.
 - `401`/auth `403`: verify the key.
-- `402`, quota, credits, balance: check https://www.hiapi.ai/en/dashboard?utm_source=skill&utm_medium=agent&utm_campaign=hiapi-seedance-2-5-video and current pricing.
+- `402`, quota, credits, balance: check https://www.hiapi.ai/en/dashboard and current pricing.
 - `400`: run `--dry-run --estimate`; check mode, duration, resolution, media format/size/count, and reference durations.
 - `429`: wait or reduce concurrency.
 - Ambiguous submit network failure: reuse the same idempotency key; do not blindly submit again.

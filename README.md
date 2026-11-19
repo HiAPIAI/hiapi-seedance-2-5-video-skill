@@ -6,7 +6,7 @@ An installable Agent Skill for planning, generating, recovering, downloading, an
 
 **Text-to-video · Image-to-video · Reference-to-video · Up to 30 seconds · Native audio**
 
-[Get an API key](https://www.hiapi.ai/en/dashboard/api-keys) · [Pricing](https://www.hiapi.ai/en/pricing) · [API docs](https://docs.hiapi.ai/models/video/seedance-2-5/) · [Seedance 2.5 prompts](https://github.com/HiAPIAI/awesome-ai-video-prompts) · [All HiAPI Skills](https://github.com/HiAPIAI/hiapi-skills)
+[Get an API key](https://www.hiapi.ai/en/dashboard/api-keys?utm_source=github&utm_medium=readme&utm_campaign=hiapi-seedance-2-5-video) · [Pricing](https://www.hiapi.ai/en/pricing?utm_source=github&utm_medium=readme&utm_campaign=hiapi-seedance-2-5-video) · [API docs](https://docs.hiapi.ai/models/video/seedance-2-5/?utm_source=github&utm_medium=readme&utm_campaign=hiapi-seedance-2-5-video) · [Seedance 2.5 prompts](https://github.com/HiAPIAI/awesome-ai-video-prompts) · [All HiAPI Skills](https://github.com/HiAPIAI/hiapi-skills)
 
 Languages: [English](README.md) | [简体中文](README.zh-CN.md)
 

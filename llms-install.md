@@ -41,5 +41,5 @@ The live check reads public schemas only and does not validate credentials or cr
 
 - https://github.com/HiAPIAI/awesome-ai-video-prompts
 - https://github.com/HiAPIAI/hiapi-skills
-- https://docs.hiapi.ai/models/video/seedance-2-5/
-- https://www.hiapi.ai/en/dashboard/api-keys
+- https://docs.hiapi.ai/models/video/seedance-2-5/?utm_source=github&utm_medium=readme&utm_campaign=hiapi-seedance-2-5-video
+- https://www.hiapi.ai/en/dashboard/api-keys?utm_source=github&utm_medium=readme&utm_campaign=hiapi-seedance-2-5-video

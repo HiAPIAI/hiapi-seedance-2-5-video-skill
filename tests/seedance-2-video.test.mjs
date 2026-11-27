@@ -239,7 +239,7 @@ test("published policy hard-blocks v1.0.0 creation but preserves recovery", asyn
 });
 
 test("default public pricing and metadata endpoints use the api host", async () => {
-  assert.equal(DEFAULT_SITE_URL, "https://api.hiapi.ai");
+  assert.equal(DEFAULT_SITE_URL, "https://api.hiapi.sh");
   const requested = [];
   const fetchImpl = async (url) => {
     requested.push(String(url));
@@ -256,7 +256,7 @@ test("default public pricing and metadata endpoints use the api host", async () 
     if (saved !== undefined) process.env.HIAPI_SITE_URL = saved;
   }
   assert.ok(requested.length > 0, "pricing requests were issued");
-  assert.ok(requested.every((url) => url.startsWith("https://api.hiapi.ai/api/")), requested.join(", "));
+  assert.ok(requested.every((url) => url.startsWith("https://api.hiapi.sh/api/")), requested.join(", "));
 });
 
 test("live contract checker validates all three public schemas", async () => {

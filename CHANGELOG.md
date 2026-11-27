@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Default `HIAPI_BASE_URL` and `HIAPI_SITE_URL` now point at `https://api.hiapi.sh`. `https://api.hiapi.ai` keeps working during the transition; set either variable to override.
+
 ## 1.2.1 — 2026-11-07
 
 - Read public pricing and no-key model schemas from `https://api.hiapi.ai`. `DEFAULT_SITE_URL` points at the API host because `https://www.hiapi.ai/api/...` redirects to `https://hiapi.ai/api/...` and returns 404, which broke estimates and the live contract check.

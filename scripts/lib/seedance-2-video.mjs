@@ -4,8 +4,8 @@ import { extname, join, resolve } from "node:path";
 
 export const SKILL_ID = "hiapi-seedance-2-5-video";
 export const SKILL_VERSION = "1.2.1";
-export const DEFAULT_BASE_URL = "https://api.hiapi.ai";
-export const DEFAULT_SITE_URL = "https://api.hiapi.ai";
+export const DEFAULT_BASE_URL = "https://api.hiapi.sh";
+export const DEFAULT_SITE_URL = "https://api.hiapi.sh";
 export const DEFAULT_SKILLS_MANIFEST_URL = "https://raw.githubusercontent.com/HiAPIAI/hiapi-skills/main/skills.json";
 export const DEFAULT_REPOSITORY_POLICY_URL = "https://raw.githubusercontent.com/HiAPIAI/hiapi-seedance-2-5-video-skill/main/update-policy.json";
 export const UPDATE_COMMAND = "npx -y github:HiAPIAI/hiapi-seedance-2-5-video-skill -y";

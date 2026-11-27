@@ -4,7 +4,7 @@ Verified against production schemas and published HiAPI docs on 2026-09-08. Run 
 
 ## Complete field map
 
-Create with `POST https://api.hiapi.ai/v1/tasks`; poll `GET https://api.hiapi.ai/v1/tasks/{taskId}`. Use Authorization Bearer, JSON Content-Type and a stable Idempotency-Key for creation.
+Create with `POST https://api.hiapi.sh/v1/tasks`; poll `GET https://api.hiapi.sh/v1/tasks/{taskId}`. Use Authorization Bearer, JSON Content-Type and a stable Idempotency-Key for creation.
 
 | Public field | CLI | Current contract |
 | --- | --- | --- |
@@ -56,5 +56,5 @@ Remove dry-run/estimate only after the user authorizes paid generation. Recover 
 - https://www.hiapi.ai/docs/models/video/seedance-2-5/
 - https://www.hiapi.ai/docs/models/video/seedance-2-5-i2v/
 - https://www.hiapi.ai/docs/models/video/seedance-2-5-r2v/
-- Public schema for each exact model via `https://api.hiapi.ai/api/models/content?name=<encoded-model-id>`
-- https://api.hiapi.ai/api/pricing
+- Public schema for each exact model via `https://api.hiapi.sh/api/models/content?name=<encoded-model-id>`
+- https://api.hiapi.sh/api/pricing
